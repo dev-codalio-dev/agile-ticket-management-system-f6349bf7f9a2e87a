@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2025_11_14_134626) do
+ActiveRecord::Schema[8.0].define(version: 2025_11_14_134724) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -73,6 +73,16 @@ ActiveRecord::Schema[8.0].define(version: 2025_11_14_134626) do
     t.index ["reset_password_token"], name: "index_admin_users_on_reset_password_token", unique: true
   end
 
+  create_table "comments", force: :cascade do |t|
+    t.text "content", null: false
+    t.bigint "ticket_id", null: false
+    t.bigint "commenter_id", null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["commenter_id"], name: "index_comments_on_commenter_id"
+    t.index ["ticket_id"], name: "index_comments_on_ticket_id"
+  end
+
   create_table "friendly_id_slugs", force: :cascade do |t|
     t.string "slug", null: false
     t.integer "sluggable_id", null: false
@@ -89,6 +99,19 @@ ActiveRecord::Schema[8.0].define(version: 2025_11_14_134626) do
     t.string "name"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+  end
+
+  create_table "projects", force: :cascade do |t|
+    t.string "name", limit: 255, null: false
+    t.text "description", null: false
+    t.datetime "start_date", null: false
+    t.datetime "end_date", null: false
+    t.bigint "organization_id", null: false
+    t.bigint "manager_id"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["manager_id"], name: "index_projects_on_manager_id"
+    t.index ["organization_id"], name: "index_projects_on_organization_id"
   end
 
   create_table "roles", force: :cascade do |t|
@@ -239,6 +262,23 @@ ActiveRecord::Schema[8.0].define(version: 2025_11_14_134626) do
     t.index ["key"], name: "index_solid_queue_semaphores_on_key", unique: true
   end
 
+  create_table "tickets", force: :cascade do |t|
+    t.string "title", limit: 255, null: false
+    t.text "description", null: false
+    t.string "category", null: false
+    t.string "status", null: false
+    t.string "priority", null: false
+    t.datetime "due_date", null: false
+    t.bigint "project_id", null: false
+    t.bigint "assignee_id"
+    t.bigint "reporter_id", null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["assignee_id"], name: "index_tickets_on_assignee_id"
+    t.index ["project_id"], name: "index_tickets_on_project_id"
+    t.index ["reporter_id"], name: "index_tickets_on_reporter_id"
+  end
+
   create_table "users", force: :cascade do |t|
     t.string "provider", default: "email", null: false
     t.string "uid", default: "", null: false
@@ -301,12 +341,19 @@ ActiveRecord::Schema[8.0].define(version: 2025_11_14_134626) do
 
   add_foreign_key "active_storage_attachments", "active_storage_blobs", column: "blob_id"
   add_foreign_key "active_storage_variant_records", "active_storage_blobs", column: "blob_id"
+  add_foreign_key "comments", "tickets"
+  add_foreign_key "comments", "users", column: "commenter_id"
+  add_foreign_key "projects", "organizations"
+  add_foreign_key "projects", "users", column: "manager_id"
   add_foreign_key "solid_queue_blocked_executions", "solid_queue_jobs", column: "job_id", on_delete: :cascade
   add_foreign_key "solid_queue_claimed_executions", "solid_queue_jobs", column: "job_id", on_delete: :cascade
   add_foreign_key "solid_queue_failed_executions", "solid_queue_jobs", column: "job_id", on_delete: :cascade
   add_foreign_key "solid_queue_ready_executions", "solid_queue_jobs", column: "job_id", on_delete: :cascade
   add_foreign_key "solid_queue_recurring_executions", "solid_queue_jobs", column: "job_id", on_delete: :cascade
   add_foreign_key "solid_queue_scheduled_executions", "solid_queue_jobs", column: "job_id", on_delete: :cascade
+  add_foreign_key "tickets", "projects"
+  add_foreign_key "tickets", "users", column: "assignee_id"
+  add_foreign_key "tickets", "users", column: "reporter_id"
   add_foreign_key "users_role_invites", "organizations"
   add_foreign_key "users_role_invites", "roles"
   add_foreign_key "users_roles", "organizations"
